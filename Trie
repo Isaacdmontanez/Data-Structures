@@ -1,0 +1,104 @@
+/*
+DESCRIPTION:
+
+This trie allows for insertion, deletion, and can return the amount of substrings at any node in the trie.
+The trie uses the existance of a pointer to determine if a node exists and to goto the next node.
+The first number of each array of nodes indicates the amount of substrings that exist up to that point.
+
+*/
+
+#include <bits/stdc++.h>
+using namespace std;
+
+const int numDistinctChars = 27;						//IMPORTANT! Set the max different chars in the trie + 1
+const char firstAsciiChar = 'a' - 1;					//IMPORTANT! Set to the first ASCII code. -1 makes space to count substrings
+unordered_map <int*, int> strEndCount;
+
+void trieInsert(string strInput, int *currentNode){
+	int *strEndCountPtr;
+	for(char currentChar : strInput){
+		++*currentNode;
+		currentNode += currentChar - firstAsciiChar;
+		if(!*currentNode){
+			*currentNode = reinterpret_cast<int>(new int[numDistinctChars]());
+		}
+		strEndCountPtr = currentNode;
+		currentNode = reinterpret_cast<int*>(*currentNode);
+	}
+	strEndCount[strEndCountPtr]++;
+}
+
+void trieRemoveStr(string strInput, int *currentNode){
+	vector <int*> nodeRemovePos, nodeCountPos;
+	int *strEndCountPtr;
+	for (char currentChar : strInput){
+		nodeCountPos.push_back(currentNode);
+		currentNode += currentChar - firstAsciiChar;
+		if (!*currentNode){
+			cout<< "Error! This string does not exist.\n";
+			return;
+		}
+		strEndCountPtr = currentNode;
+		currentNode = reinterpret_cast<int*>(*currentNode);
+		nodeRemovePos.push_back(currentNode);
+	}
+	if (!strEndCount[strEndCountPtr]){
+		cout<< "Error! This string is a substring of the trie but is not a complete string.\n";
+		return;
+	}
+	strEndCount[strEndCountPtr]--;
+	for(int i = strInput.length() - 1, forkCheck = 1; i >= 0; i--){
+		if(!--*nodeCountPos[i]){
+			delete[] nodeRemovePos[i];
+			*(nodeCountPos[i] + strInput.at(i) - firstAsciiChar) = 0;
+		}else if (forkCheck-- && !*reinterpret_cast<int*>(*(nodeCountPos[i] + strInput.at(i) - firstAsciiChar))){
+			delete[] nodeRemovePos[i];
+			*(nodeCountPos[i] + strInput.at(i) - firstAsciiChar) = 0;
+		}
+	}
+}
+
+void trieSearch(string strInput, int *currentNode){
+	int *lastNodeCount;
+	for (char currentChar : strInput){
+		lastNodeCount = currentNode;
+		currentNode += currentChar - firstAsciiChar;
+		if(!*currentNode){
+			cout << "Error! This string does not exist.\n";
+			return;
+		}
+		currentNode = reinterpret_cast<int*>(*currentNode);
+	}
+	int activeStrCount = *lastNodeCount;
+	for(int i = 1, removeNodeVal; i < numDistinctChars; i++){
+		if (i == strInput.back() - firstAsciiChar){
+			continue;
+		}
+		activeStrCount -= strEndCount[(lastNodeCount+i)];
+		removeNodeVal = reinterpret_cast<int>(*(lastNodeCount+i));
+		if(removeNodeVal != 0){
+			activeStrCount -= *reinterpret_cast<int*>(removeNodeVal);
+		}
+	}
+	cout<<"There are: "<< activeStrCount <<" substrings with this string.\n";
+}
+
+int main(){
+	int numOfOperations, typeOfOperation, *rootNodePos = new int[numDistinctChars]();
+	string strInput;
+	cin >> numOfOperations;
+	for (int i=0; i < numOfOperations; i++){
+		cin >> typeOfOperation >> strInput;
+		switch (typeOfOperation){
+			case 0:
+				trieInsert(strInput, rootNodePos);
+				continue;
+			case 1:
+				trieRemoveStr(strInput, rootNodePos);
+				continue;
+			case 2:
+				trieSearch(strInput, rootNodePos);
+				continue;
+		}
+	}
+}
