@@ -10,7 +10,7 @@ The first number of each array of nodes indicates the amount of substrings that 
 #include <bits/stdc++.h>
 using namespace std;
 
-const int numDistinctChars = 27;						//IMPORTANT! Set the max different chars in the trie + 1
+const int numDistinctChars = 27;					//IMPORTANT! Set the max different chars in the trie + 1
 const char firstAsciiChar = 'a' - 1;					//IMPORTANT! Set to the first ASCII code. -1 makes space to count substrings
 unordered_map <int*, int> strEndCount;
 
